@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Manager",
+  "version": "1.0",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": ["alarms", "tabGroups","storage"],
+  "background": {
+      "service_worker": "background.js",
+      "type": "module"
+  }
+}

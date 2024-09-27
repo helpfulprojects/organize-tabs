@@ -1,0 +1,16 @@
+{
+  "name": "organise-tabs",
+  "version": "1.0.0",
+  "description": "Chrome extension that allows with a click of a button to group tabs based on user behaviour.",
+  "scripts": {
+    "build": "webpack --config webpack.prod.js",
+    "start": "webpack --watch --config webpack.dev.js"
+  },
+  "author": "peca",
+  "devDependencies": {
+    "copy-webpack-plugin": "^12.0.2",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-merge": "^6.0.1"
+  }
+}
