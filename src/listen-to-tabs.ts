@@ -62,44 +62,6 @@ function removeNode(graph: Graph, node: string): void {
   }
 }
 
-function labelPropagation(graph: Graph): { [node: string]: string } {
-  let labels: { [node: string]: string } = {};
-  let converged = false;
-
-  Object.keys(graph).forEach((node) => {
-    labels[node] = node;
-  });
-
-  while (!converged) {
-    converged = true;
-
-    const nodes = Object.keys(graph);
-    nodes.sort(() => Math.random() - 0.5);
-
-    for (let node of nodes) {
-      let labelCounts: { [label: string]: number } = {};
-
-      for (let neighbor in graph[node]) {
-        let neighborLabel = labels[neighbor];
-        if (!labelCounts[neighborLabel]) {
-          labelCounts[neighborLabel] = 0;
-        }
-        labelCounts[neighborLabel] += graph[node][neighbor];
-      }
-
-      let bestLabel = Object.keys(labelCounts).reduce((a, b) =>
-        labelCounts[a] > labelCounts[b] ? a : b
-      );
-
-      if (labels[node] !== bestLabel) {
-        labels[node] = bestLabel;
-        converged = false;
-      }
-    }
-  }
-
-  return labels;
-}
 chrome.tabs.onRemoved.addListener((tabId) => {
   if (!storageData) return;
   removeTab(tabId.toString());
