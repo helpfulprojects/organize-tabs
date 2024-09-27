@@ -8,6 +8,11 @@ export interface StorageData {
   lastHighlight: string | null;
   graph: Graph;
 }
+
+let storageData: StorageData | null;
+chrome.storage.local.get(["lastHighlight", "graph"], (result: StorageData) => {
+  storageData = result;
+});
 export function initStorage() {
   const initialData: StorageData = {
     lastHighlight: null,
@@ -16,6 +21,7 @@ export function initStorage() {
 
   chrome.storage.local.set(initialData);
 }
+
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") {
     initStorage();
@@ -94,56 +100,49 @@ function labelPropagation(graph: Graph): { [node: string]: string } {
 
   return labels;
 }
-let removedTab = false;
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-  removedTab = true;
+chrome.tabs.onRemoved.addListener((tabId) => {
+  if (!storageData) return;
   removeTab(tabId.toString());
+  updateLastHighlight(null);
+  chrome.storage.local.set(storageData);
 });
-async function updateLastHighlight(tabId: string) {
-  const result: StorageData = await chrome.storage.local.get([
-    "lastHighlight",
-    "graph",
-  ]);
-  result.lastHighlight = tabId;
-  return chrome.storage.local.set(result);
+function updateLastHighlight(tabId: string | null) {
+  if (!storageData) return;
+  storageData.lastHighlight = tabId;
 }
 
-async function connectTabs(tabA: string, tabB: string) {
-  console.log("connected tabs", tabA, tabB);
-  const result: StorageData = await chrome.storage.local.get([
-    "lastHighlight",
-    "graph",
-  ]);
-  increaseEdgeWeight(result.graph, tabA, tabB);
-  return chrome.storage.local.set(result);
+function connectTabs(tabA: string, tabB: string) {
+  if (!storageData) return;
+  increaseEdgeWeight(storageData.graph, tabA, tabB);
 }
 
-async function removeTab(tabId: string) {
-  console.log("remove tab", tabId);
-  const result: StorageData = await chrome.storage.local.get([
-    "lastHighlight",
-    "graph",
-  ]);
-  removeNode(result.graph, tabId);
-  result.lastHighlight = null;
-  chrome.storage.local.set(result);
+function removeTab(tabId: string) {
+  if (!storageData) return;
+  removeNode(storageData.graph, tabId);
 }
-chrome.tabs.onHighlighted.addListener(async (highlightInfo) => {
-  if (removedTab) {
-    removedTab = false;
-    return;
-  }
+chrome.tabs.onHighlighted.addListener((highlightInfo) => {
+  if (!storageData) return;
   const tabIds = highlightInfo.tabIds;
   if (tabIds.length != 1) {
     return;
   }
   const tabId = tabIds[0].toString();
-  const storageData: StorageData = await chrome.storage.local.get([
-    "lastHighlight",
-    "graph",
-  ]);
   if (storageData.lastHighlight) {
-    await connectTabs(tabId, storageData.lastHighlight);
+    connectTabs(storageData.lastHighlight, tabId);
   }
   updateLastHighlight(tabId);
+  chrome.storage.local.set(storageData);
+});
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.message === "clear") {
+    storageData = null;
+    initStorage();
+    chrome.storage.local.get(
+      ["lastHighlight", "graph"],
+      (result: StorageData) => {
+        storageData = result;
+      }
+    );
+  }
 });

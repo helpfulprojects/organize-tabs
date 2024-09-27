@@ -7,7 +7,7 @@ if (groupBtn && clearBtn && watchedTabsBtn) {
     console.log("group");
   });
   clearBtn.addEventListener("click", async () => {
-    initStorage();
+    chrome.runtime.sendMessage({ message: "clear" });
   });
   watchedTabsBtn.addEventListener("click", async () => {
     const result: StorageData = await chrome.storage.local.get([
