@@ -82,7 +82,7 @@ function removeTab(tabId: string) {
   if (!storageData) return;
   removeNode(storageData.graph, tabId);
 }
-chrome.tabs.onHighlighted.addListener((highlightInfo) => {
+chrome.tabs.onHighlighted.addListener(async (highlightInfo) => {
   if (!storageData) return;
   const tabIds = highlightInfo.tabIds;
   if (tabIds.length != 1) {
@@ -93,6 +93,7 @@ chrome.tabs.onHighlighted.addListener((highlightInfo) => {
     connectTabs(storageData.lastHighlight, tabId);
   }
   updateLastHighlight(tabId);
+  await removeMissingTabs();
   chrome.storage.local.set(storageData);
 });
 
@@ -108,3 +109,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     );
   }
 });
+
+async function removeMissingTabs() {
+  if (!storageData) return;
+  const tabs = await chrome.tabs.query({});
+  const currentTabs = tabs.map(({ id }) => id?.toString());
+  Object.keys(storageData.graph).forEach((node) => {
+    if (!currentTabs.includes(node)) {
+      removeTab(node);
+    }
+  });
+}

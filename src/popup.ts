@@ -37,8 +37,9 @@ if (groupBtn && clearBtn && watchedTabsBtn && ungroupBtn) {
             }
             labelCounts[neighborLabel] += graph[node][neighbor];
           }
-
-          let bestLabel = Object.keys(labelCounts).reduce((a, b) =>
+          let keys = Object.keys(labelCounts);
+          if (keys.length <= 0) continue;
+          let bestLabel = keys.reduce((a, b) =>
             labelCounts[a] > labelCounts[b] ? a : b
           );
 
